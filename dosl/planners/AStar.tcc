@@ -121,7 +121,7 @@ public:
         void nodeEvent (unsigned int e) { }
         #endif
         inline void print (std::string head="", std::string tail="") {
-            _dosl_printf(_GREEN "%s (%x) %s" GREEN_, head.c_str(), this, tail.c_str());
+            _dosl_printf(_GREEN "%s (%x) %s" GREEN_, head.c_str(), 0x20, tail.c_str());
         }
         // Derived functions. Can also be directly overwritten.
         inline CostType getHeapKey (double subopEps) { return (g_score + (CostType)(subopEps*getHeuristics())); }
@@ -289,7 +289,7 @@ void AStar::Algorithm<AlgDerived,NodeType,CostType>::generate_successors (NodeTy
         
         #if _DOSL_DEBUG > 0
         if (this_successors.size()!=this_transition_costs.size())
-            _dosl_err("Number of successors (%d) is different from numer of transition costs (%d) as returned by 'getSuccessors'.", this_successors.size(), this_transition_costs.size());
+            _dosl_err("Number of successors (%lu) is different from numer of transition costs (%lus) as returned by 'getSuccessors'.", this_successors.size(), this_transition_costs.size());
         #endif
         
         node_in_hash_p->successors.reserve (this_successors.size()); // reserve space for fast pushing
@@ -372,7 +372,7 @@ void AStar::Algorithm<AlgDerived,NodeType,CostType>::search (void)
         // Generate the neighbours if they are already not generated
         generate_successors (thisNodeInHash_p);
         if (_dosl_verbose_on(1)) {
-            _dosl_printf("Number of successors = %d.", thisNodeInHash_p->successors.size());
+            _dosl_printf("Number of successors = %lu.", thisNodeInHash_p->successors.size());
         }
         
         // -----------------------------------------------------
@@ -511,7 +511,6 @@ std::vector<NodeType*> AStar::Algorithm<AlgDerived,NodeType,CostType>::reconstru
     // Reconstruct path
     NodeType* thisNodeInHash_p = all_nodes_set_p->get(n);
     if (_dosl_verbose_on(0))  n.print("Reconstruct path called");
-    if (_dosl_verbose_on(1))  _dosl_printf("Node in hash: %x.", thisNodeInHash_p);
     while (thisNodeInHash_p) {
         if (_dosl_verbose_on(1)) thisNodeInHash_p->print();
         thisPath.push_back (thisNodeInHash_p);
