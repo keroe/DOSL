@@ -130,7 +130,7 @@ public:
         // Functions to be overwritten by user node type
         inline int getHashBin (void) { return (0); }
         bool operator==(const NodeType& n)
-            { _dosl_default_fun_warn("'SStar::Node::operator==' OR 'SStar::Algorithm::equalTo'"); }
+        { _dosl_default_fun_warn("'SStar::Node::operator==' OR 'SStar::Algorithm::equalTo'"); return (false);}
         inline void getSuccessors (std::vector<NodeType>* s, std::vector<CostType>* c)
             { _dosl_default_fun_warn("SStar::[Algorithm|Node]::getSuccessors"); }
         inline CostType getHeuristics (void) { return ((CostType)0.0); }
