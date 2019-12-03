@@ -90,6 +90,7 @@ public:
         // Node specific variables
         CostType f_score, g_score;
         bool expanded; // Whether in closed list or not
+        uint depth;
         LineageDataType lineage_data; // stores which start node the node came from
         
         // successors
@@ -102,7 +103,7 @@ public:
         // -------------------------------------
         // constructors
         Node() : post_hash_insert_initiated(false),
-                      expanded(false), successors_created(false), came_from(NULL), lineage_data(LineageDataType()) { }
+                      expanded(false), successors_created(false), came_from(NULL), lineage_data(LineageDataType()), depth(0) { }
         // pseudo-destructor
         void clear_search_data (unsigned int mode = CLEAR_NODE_SUCCESSORS);
         
@@ -209,6 +210,13 @@ public:
         // access other node data
         inline NodeType* get_node_pointer (NodeType n) { return (all_nodes_set_p->get(n)); }
         inline CostType get_costs_to_nodes (NodeType n) { return (all_nodes_set_p->get(n)->g_score); }
+        inline void set_node_depth (NodeType* n) {          auto node = n;
+                                                            uint i = 0;
+                                                            while((node->came_from)){
+                                                                node = node->came_from;
+                                                                i++;
+                                                            }
+                                                            n->depth = i;}
         // bookmark nodes
         inline std::vector<NodeType*> get_bookmark_node_pointers (void) { return (bookmarked_node_pointers); }
         
@@ -379,6 +387,8 @@ void AStar::Algorithm<AlgDerived,NodeType,CostType>::search (void)
         // Expand
         
         thisNodeInHash_p->expanded = true; // Put in closed list
+        set_node_depth(thisNodeInHash_p);
+
         
         #if _DOSL_EVENTHANDLER
         _this->nodeEvent (*thisNodeInHash_p, EXPANDED|POPPED);
