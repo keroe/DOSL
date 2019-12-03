@@ -298,7 +298,7 @@ void AStar::Algorithm<AlgDerived,NodeType,CostType>::generate_successors (NodeTy
         
         #if _DOSL_DEBUG > 0
         if (this_successors.size()!=this_transition_costs.size())
-            _dosl_err("Number of successors (%d) is different from numer of transition costs (%d) as returned by 'getSuccessors'.", this_successors.size(), this_transition_costs.size());
+            _dosl_err("Number of successors (%lu) is different from numer of transition costs (%lu) as returned by 'getSuccessors'.", this_successors.size(), this_transition_costs.size());
         #endif
         
         node_in_hash_p->successors.reserve (this_successors.size()); // reserve space for fast pushing
@@ -381,7 +381,7 @@ void AStar::Algorithm<AlgDerived,NodeType,CostType>::search (void)
         // Generate the neighbours if they are already not generated
         generate_successors (thisNodeInHash_p);
         if (_dosl_verbose_on(1)) {
-            _dosl_printf("Number of successors = %d.", thisNodeInHash_p->successors.size());
+            _dosl_printf("Number of successors = %lu.", thisNodeInHash_p->successors.size());
         }
         
         // -----------------------------------------------------
