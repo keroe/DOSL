@@ -112,8 +112,8 @@ public:
         // If functions in Algorithm class are overwritten, these will be ignored.
         inline int getHashBin (void) { return (0); }
         bool operator==(const NodeType& n)
-            { _dosl_default_fun_warn("'AStar::Node::operator==' OR 'AStar::Algorithm::equalTo'"); }
-        inline bool operator<(const NodeType& n) const { return g_score < n.g_score;}
+        { _dosl_default_fun_warn("'AStar::Node::operator==' OR 'AStar::Algorithm::equalTo'"); return false;}
+        inline bool operator<(const NodeType& n) const { return f_score < n.f_score;}
         inline void getSuccessors (std::vector<NodeType>* s, std::vector<CostType>* c)
             { _dosl_default_fun_warn("AStar::[Algorithm|Node]::getSuccessors"); }
         inline CostType getHeuristics (void) { return ((CostType)0.0); }
