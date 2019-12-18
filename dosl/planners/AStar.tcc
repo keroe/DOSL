@@ -202,7 +202,7 @@ public:
         
         // ---------------------------
         // Main search functions
-        void search (void);
+        bool search (double timeout);
         void clear (unsigned int mode = CLEAR_NODE_DATA | CLEAR_NODES_HEAP);
         
         // Functions for reading paths to arbitrary nodes
@@ -315,7 +315,7 @@ void AStar::Algorithm<AlgDerived,NodeType,CostType>::generate_successors (NodeTy
 // -------------------------------------------------------------------------------------
 
 template <class AlgDerived, class NodeType, class CostType>
-void AStar::Algorithm<AlgDerived,NodeType,CostType>::search (void)
+bool AStar::Algorithm<AlgDerived,NodeType,CostType>::search (double timeout)
 {
     _dosl_verbose_head(1);
     
@@ -327,8 +327,9 @@ void AStar::Algorithm<AlgDerived,NodeType,CostType>::search (void)
     #endif
     
     expand_count = 0;
+    timer.start();
     if (_dosl_verbose_on(0)) {
-        timer.start();
+
     }
     
     // Temporary variables
@@ -413,7 +414,11 @@ void AStar::Algorithm<AlgDerived,NodeType,CostType>::search (void)
                     _dosl_printf("... Number of states expanded: %d. Heap size: %d. Time elapsed: %f s.", 
                             expand_count, node_heap_p->size(), timer.read());
                 }
-            return;
+            return true;
+        }
+
+        if (timer.read() > timeout){
+          return false;
         }
         
         // Initiate the neighbours (if required) and update their g_score & f_score values
@@ -472,6 +477,7 @@ void AStar::Algorithm<AlgDerived,NodeType,CostType>::search (void)
             }
         }
     }
+
     
     if (_dosl_verbose_on(0)) {
         if (progress_show_interval>0 && node_heap_p->empty()) {
@@ -479,6 +485,7 @@ void AStar::Algorithm<AlgDerived,NodeType,CostType>::search (void)
                        expand_count, node_heap_p->size(), timer.read());
         }
     }
+    return false;
 }
 
 // -------------------------------------------------------------------------------------
