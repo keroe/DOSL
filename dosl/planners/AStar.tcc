@@ -43,6 +43,8 @@
 #include "../utils/macros_constants.tcc"
 #include "../utils/stl_utils.tcc"
 #include "planner_bits.hpp"
+//#include "grid_ros/grid.hpp"
+
 
 // ====================================================================
 
@@ -119,6 +121,7 @@ public:
         inline CostType getHeuristics (void) { return ((CostType)0.0); }
         inline bool bookmarkNode (void) { return (false); }
         inline bool stopSearch (void) { return (false); }
+        inline void publishPath(void) {}
         #if _DOSL_EVENTHANDLER
         void nodeEvent (unsigned int e) { }
         #endif
@@ -234,6 +237,7 @@ public:
             { _dosl_default_fun_warn("AStar::Algorithm::getStartNodes"); return (std::vector<NodeType>()); }
         inline bool bookmarkNode (NodeType &n) { return (n.bookmarkNode()); }
         inline bool stopSearch (NodeType &n) { return (n.stopSearch()); }
+        inline void publishPath(NodeType &n) {return n.publishPath();}
         #if _DOSL_EVENTHANDLER
         inline void nodeEvent (NodeType &n, unsigned int e) { n.nodeEvent(e); }
         #endif
@@ -448,7 +452,7 @@ bool AStar::Algorithm<AlgDerived,NodeType,CostType>::search (double timeout)
                 #if _DOSL_EVENTHANDLER
                 _this->nodeEvent (*this_neighbour_node_in_hash_p, PUSHED);
                 #endif
-                
+                _this->publishPath(*this_neighbour_node_in_hash_p);
                 continue;
             }
             
