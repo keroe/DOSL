@@ -122,7 +122,7 @@ public:
         inline bool bookmarkNode (void) { return (false); }
         inline bool stopSearch (void) { return (false); }
         inline void publishPath(void) {}
-        inline bool checkValidNode() {return false;}
+        inline bool checkValidNode(void) {return false;}
         #if _DOSL_EVENTHANDLER
         void nodeEvent (unsigned int e) { }
         #endif
@@ -239,7 +239,7 @@ public:
         inline bool bookmarkNode (NodeType &n) { return (n.bookmarkNode()); }
         inline bool stopSearch (NodeType &n) { return (n.stopSearch()); }
         inline void publishPath(NodeType &n) {return n.publishPath();}
-        inline bool checkValidNode(NodeType &n){return n.checkValidNode();}
+        inline bool checkValidNode(NodeType &n) {return true;}
         #if _DOSL_EVENTHANDLER
         inline void nodeEvent (NodeType &n, unsigned int e) { n.nodeEvent(e); }
         #endif
@@ -386,7 +386,7 @@ bool AStar::Algorithm<AlgDerived,NodeType,CostType>::search (double timeout)
         }
         
         // Generate the neighbours if they are already not generated
-        if (checkValidNode(*thisNodeInHash_p)){
+        if (_this->checkValidNode(*thisNodeInHash_p)){
            generate_successors (thisNodeInHash_p);
         }
         if (_dosl_verbose_on(1)) {
