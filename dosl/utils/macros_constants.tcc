@@ -143,10 +143,12 @@
 class ChronoTimer {
 public:
     std::chrono::high_resolution_clock::time_point t;
+    double search_time = 0.0;
     void start(void) { t = std::chrono::high_resolution_clock::now(); }
     double read(void) {
         return (double)(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now()-t).count()) / 1e9;
     }
+    void stop(void){search_time = (double)(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now()-t).count()) / 1e9;}
 };
 
 // =================================================
