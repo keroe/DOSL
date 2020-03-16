@@ -67,12 +67,13 @@ constexpr bool _is_verbose_on (char const * funcname, unsigned int const level=0
 class dosl_verbose_function {
 public:
     char funcname[256];
-    bool isInitiated;
-    int verbose_level, level_increment, subblock_increment;
+
     
     dosl_verbose_function() : level_increment(0), subblock_increment(0), isInitiated(false) {}
     dosl_verbose_function (const char* fn, int dl=1) { init (fn, dl); }
     
+    int verbose_level, level_increment, subblock_increment;
+    bool isInitiated;
     void init (const char* fn, int dl=1) {
         strcpy(funcname,fn);
         level_increment = dl;
@@ -111,8 +112,8 @@ public:
                 if ( DOSL_RUNTIME_VERBOSE_SWITCH  &&  _is_verbose_on(__func__, _DOSL_VERBOSE_FUN_DEPTH+(dl)) ) { \
                     fun_verbose.init (__func__,dl); \
                     printf("\n"); print_indentation(0); \
-                    printf(_BLUE "function: %s. level: %d." BLUE_, fun_verbose.funcname, fun_verbose.verbose_level); \ 
-                    std::cout << std::endl; \
+                    printf(_BLUE "function: %s. level: %d." BLUE_, fun_verbose.funcname, fun_verbose.verbose_level);\
+                    std::cout << std::endl;\
                 }
 #endif
 

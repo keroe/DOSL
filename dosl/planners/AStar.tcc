@@ -90,22 +90,24 @@ public:
         bool post_hash_insert_initiated;
         
         // Node specific variables
-        CostType f_score, g_score;
-        bool expanded; // Whether in closed list or not
-        uint depth;
-        LineageDataType lineage_data; // stores which start node the node came from
         
         // successors
         _DOSL_SMALL_MAP<NodeType*,CostType> successors;
-        bool successors_created;
         
         // for reconstruction
-        NodeType* came_from;
+
         
         // -------------------------------------
         // constructors
         Node() : post_hash_insert_initiated(false),
                       expanded(false), successors_created(false), came_from(NULL), lineage_data(LineageDataType()), depth(0) { }
+        bool expanded; // Whether in closed list or not
+        bool successors_created;
+        NodeType* came_from;
+        LineageDataType lineage_data; // stores which start node the node came from
+        CostType f_score, g_score;
+        uint depth;
+
         // pseudo-destructor
         void clear_search_data (unsigned int mode = CLEAR_NODE_SUCCESSORS);
         
@@ -118,6 +120,7 @@ public:
         inline bool operator<(const NodeType& n) const { return f_score < n.f_score;}
         inline void getSuccessors (std::vector<NodeType>* s, std::vector<CostType>* c)
             { _dosl_default_fun_warn("AStar::[Algorithm|Node]::getSuccessors"); }
+        inline void addExpandedNodeToDebugPlot() const {}
         inline CostType getHeuristics (void) { return ((CostType)0.0); }
         inline bool bookmarkNode (void) { return (false); }
         inline bool stopSearch (void) { return (false); }
@@ -210,17 +213,10 @@ public:
         
         // Functions for reading paths to arbitrary nodes
         std::vector < std::unordered_map <NodeType*, CostType> > reconstruct_weighted_pointer_path (NodeType n); // for compatibility with SStar
-        std::vector<NodeType*> reconstruct_pointer_path (NodeType n);
+        std::vector<NodeType*> reconstruct_pointer_path (NodeType n) const;
         // access other node data
         inline NodeType* get_node_pointer (NodeType n) { return (all_nodes_set_p->get(n)); }
         inline CostType get_costs_to_nodes (NodeType n) { return (all_nodes_set_p->get(n)->g_score); }
-        inline void set_node_depth (NodeType* n) {          auto node = n;
-                                                            uint i = 0;
-                                                            while((node->came_from)){
-                                                                node = node->came_from;
-                                                                i++;
-                                                            }
-                                                            n->depth = i;}
         // bookmark nodes
         inline std::vector<NodeType*> get_bookmark_node_pointers (void) { return (bookmarked_node_pointers); }
         
@@ -232,6 +228,7 @@ public:
         bool equalTo (NodeType &n1, NodeType &n2) { return (n1==n2); }
         void getSuccessors (NodeType &n, std::vector<NodeType>* const s, std::vector<CostType>* const c) 
                                             { return (n.getSuccessors(s,c)); }
+        void addExpandedNodeToDebugPlot(NodeType& node){return node.addExpandedNodeToDebugPlot();}
         inline CostType getHeuristics (NodeType& n) { return (n.getHeuristics()); }
         inline std::vector<NodeType> getStartNodes (void)
             { _dosl_default_fun_warn("AStar::Algorithm::getStartNodes"); return (std::vector<NodeType>()); }
@@ -251,11 +248,10 @@ public:
         
         // Derived and helper functions
         void generate_successors (NodeType* node_in_hash_p);
-        
         // Temporary variables
         std::vector<NodeType> this_successors;
         std::vector<CostType> this_transition_costs;
-        int a;
+        uint a;
         
         // Preventing making copies of an instance of the search class
         Algorithm (const Algorithm& alg);
@@ -343,7 +339,7 @@ bool AStar::Algorithm<AlgDerived,NodeType,CostType>::search (double timeout)
     
     // -----------------------------------
     // Insert start nodes into open list
-    for (int a=0; a<start_nodes.size(); a++) {
+    for (uint a=0; a<start_nodes.size(); a++) {
         start_nodes[a].clear_search_data (CLEAR_NODE_SUCCESSORS | CLEAR_NODE_LINEAGE); // in case this node is output of a previous search
         // put start node in hash
         thisNodeInHash_p = all_nodes_set_p->get (start_nodes[a]);
@@ -378,13 +374,16 @@ bool AStar::Algorithm<AlgDerived,NodeType,CostType>::search (double timeout)
         
         // get the node with least f_score-value
         thisNodeInHash_p = node_heap_p->pop();
+        _this->publishPath(*thisNodeInHash_p);
         if (_dosl_verbose_on(1)) {
             thisNodeInHash_p->print("Now expanding: ");
             _dosl_printf("g_score-value at expanding node: %f. f_score-value at expanding node: %f.", thisNodeInHash_p->g_score, thisNodeInHash_p->f_score);
         }
         
+
         // Generate the neighbours if they are already not generated
         generate_successors (thisNodeInHash_p);
+        _this->addExpandedNodeToDebugPlot(*thisNodeInHash_p);
         if (_dosl_verbose_on(1)) {
             _dosl_printf("Number of successors = %lu.", thisNodeInHash_p->successors.size());
         }
@@ -393,7 +392,7 @@ bool AStar::Algorithm<AlgDerived,NodeType,CostType>::search (double timeout)
         // Expand
         
         thisNodeInHash_p->expanded = true; // Put in closed list
-        set_node_depth(thisNodeInHash_p);
+
 
         
         #if _DOSL_EVENTHANDLER
@@ -418,6 +417,7 @@ bool AStar::Algorithm<AlgDerived,NodeType,CostType>::search (double timeout)
                     _dosl_printf("... Number of states expanded: %d. Heap size: %d. Time elapsed: %f s.", 
                             expand_count, node_heap_p->size(), timer.read());
                 }
+            timer.stop();
             return true;
         }
 
@@ -438,6 +438,7 @@ bool AStar::Algorithm<AlgDerived,NodeType,CostType>::search (double timeout)
                 this_neighbour_node_in_hash_p->g_score = thisNodeInHash_p->g_score + thisTransitionCost;
                 this_neighbour_node_in_hash_p->f_score = _this->getHeapKey (*this_neighbour_node_in_hash_p);
                 this_neighbour_node_in_hash_p->expanded = false;
+                this_neighbour_node_in_hash_p->depth = thisNodeInHash_p->depth + 1;
                 // Put in open list and continue to next neighbour
                 this_neighbour_node_in_hash_p->post_hash_insert_initiated = true;
                                         // ^^^ Always set this when other variables have already been set
@@ -452,7 +453,7 @@ bool AStar::Algorithm<AlgDerived,NodeType,CostType>::search (double timeout)
                 #if _DOSL_EVENTHANDLER
                 _this->nodeEvent (*this_neighbour_node_in_hash_p, PUSHED);
                 #endif
-                _this->publishPath(*this_neighbour_node_in_hash_p);
+
                 continue;
             }
             
@@ -525,7 +526,7 @@ void AStar::Algorithm<AlgDerived,NodeType,CostType>::clear (unsigned int mode)
 // For reading results:
 
 template <class AlgDerived, class NodeType, class CostType>
-std::vector<NodeType*> AStar::Algorithm<AlgDerived,NodeType,CostType>::reconstruct_pointer_path (NodeType n)
+std::vector<NodeType*> AStar::Algorithm<AlgDerived,NodeType,CostType>::reconstruct_pointer_path (NodeType n) const
 {
     _dosl_verbose_head(1);
         
