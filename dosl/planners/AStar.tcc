@@ -378,6 +378,10 @@ bool AStar::Algorithm<AlgDerived,NodeType,CostType>::search (double timeout)
         // get the node with least f_score-value
         thisNodeInHash_p = node_heap_p->pop();
         _this->publishPath(*thisNodeInHash_p);
+        if (_this->getVerbosityLevel() == 1 && _this->getDebug() ){
+          _this->debug_plot_->plotTrivial(thisNodeInHash_p->getDeposedPath().transformLinestring());
+          _this->debug_plot_->plotOccupancy(thisNodeInHash_p->getDeposedPath().transformOccupancy());
+        }
         if (_dosl_verbose_on(1)) {
             thisNodeInHash_p->print("Now expanding: ");
             _dosl_printf("g_score-value at expanding node: %f. f_score-value at expanding node: %f.", thisNodeInHash_p->g_score, thisNodeInHash_p->f_score);
