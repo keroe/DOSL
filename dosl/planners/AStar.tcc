@@ -430,7 +430,15 @@ bool AStar::Algorithm<AlgDerived,NodeType,CostType>::search (double timeout)
         }
 
         if (timer.read() > timeout){
-          return false;
+          timer.stop();
+          // find best solution up to now
+          _this->setGoalNode(*_this->all_nodes_set_p->find_lowest_score(*thisNodeInHash_p));
+          if(_this->getGoalNode().depth > 14){
+            return true;
+          }
+          else{
+            return false;
+          }
         }
         
         // Initiate the neighbours (if required) and update their g_score & f_score values
