@@ -218,7 +218,7 @@ public:
         inline NodeType* get_node_pointer (NodeType n) { return (all_nodes_set_p->get(n)); }
         inline CostType get_costs_to_nodes (NodeType n) { return (all_nodes_set_p->get(n)->g_score); }
         // bookmark nodes
-        inline std::vector<NodeType*> get_bookmark_node_pointers (void) { return (bookmarked_node_pointers); }
+        inline std::vector<NodeType*> get_bookmark_node_pointers (void) const { return (bookmarked_node_pointers); }
         
         // =====================================================
         // -----------------------------------------------------
@@ -320,6 +320,8 @@ bool AStar::Algorithm<AlgDerived,NodeType,CostType>::search (double timeout)
     _dosl_verbose_head(1);
     
     start_nodes = _this->getStartNodes();
+
+    bookmarked_node_pointers.reserve(10000);
     
     #if _DOSL_DEBUG > 0
     if (start_nodes.size()==0)
@@ -400,7 +402,8 @@ bool AStar::Algorithm<AlgDerived,NodeType,CostType>::search (double timeout)
         #endif
         
         // Check if we need to bookmark the node being Expanded
-        if ( _this->bookmarkNode (*thisNodeInHash_p) )
+
+        if ( _this->getDebug() )
         {
             bookmarked_node_pointers.push_back (thisNodeInHash_p);
             if (_dosl_verbose_on(0)) {
