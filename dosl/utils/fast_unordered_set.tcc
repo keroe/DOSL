@@ -81,6 +81,7 @@ public:
     inline int size() { return (Size); }
     Key* get (key & n); // Returns pointer to already-existing item, else creates one
     template<class FindEqFunc=EqualToFunctor> std::vector<Key*> getall (key & n, FindEqFunc eqfunc_instance, bool search_other_bins=false);
+    key* find_lowest_score (key& n);
 
     // Clear
     void clear (bool destroyHashTable=false) {
@@ -204,5 +205,35 @@ std::vector<key*> fast_unordered_set<key,HashFunctor,EqualToFunctor>::getall (ke
                 
     return (ret);
 }
+
+template <class key, class HashFunctor, class EqualToFunctor>
+key* fast_unordered_set<key,HashFunctor,EqualToFunctor>::find_lowest_score (key& n) {
+    if (!HashTable) init(); // TODO: remove this check?
+
+    unsigned int startHashBin=0, endHashBinP1=hash_table_size;
+
+    startHashBin = hash_functor_instance(n);
+    #if _DOSL_HASH_BIN_CHECK
+    startHashBin %= hash_table_size;
+    #endif
+    endHashBinP1 = startHashBin+1;
+
+    std::vector<key*> max_key_vector;
+    for (int hashBin=startHashBin; hashBin<endHashBinP1; ++hashBin){
+      key* max_key = *std::min_element( HashTable[hashBin].begin(), HashTable[hashBin].end(),
+                                   []( const key* a, const key* b )
+                                   {
+                                       return a->f_score < b->f_score;
+                                   } );
+      max_key_vector.push_back(max_key);
+    }
+
+    return *std::min_element( max_key_vector.begin(), max_key_vector.end(),
+                                   []( const key* a, const key* b )
+                                   {
+                                       return a->f_score < b->f_score;
+                                   } );
+}
+
 
 #endif
