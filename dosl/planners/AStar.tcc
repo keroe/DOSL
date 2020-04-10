@@ -235,6 +235,7 @@ public:
         inline bool bookmarkNode (NodeType &n) { return (n.bookmarkNode()); }
         inline bool stopSearch (NodeType &n) { return (n.stopSearch()); }
         inline void publishPath(NodeType &n) {return n.publishPath();}
+        inline void setGoalNode(NodeType &n){}
         #if _DOSL_EVENTHANDLER
         inline void nodeEvent (NodeType &n, unsigned int e) { n.nodeEvent(e); }
         #endif
