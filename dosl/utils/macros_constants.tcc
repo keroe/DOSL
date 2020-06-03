@@ -148,6 +148,9 @@ public:
     double read(void) {
         return (double)(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now()-t).count()) / 1e9;
     }
+    double read_milliseconds(void) {
+        return (double)(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now()-t).count()) / 1e6;
+    }
     void stop(void){search_time = (double)(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now()-t).count()) / 1e9;}
 };
 

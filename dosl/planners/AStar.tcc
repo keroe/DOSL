@@ -107,6 +107,7 @@ public:
         LineageDataType lineage_data; // stores which start node the node came from
         CostType f_score, g_score;
         uint depth;
+        double expansion_time = 0;
 
         // pseudo-destructor
         void clear_search_data (unsigned int mode = CLEAR_NODE_SUCCESSORS);
@@ -125,6 +126,7 @@ public:
         inline bool bookmarkNode (void) { return (false); }
         inline bool stopSearch (void) { return (false); }
         inline void publishPath(void) {}
+        inline double getExpansionTime() const {return expansion_time;}
         #if _DOSL_EVENTHANDLER
         void nodeEvent (unsigned int e) { }
         #endif
@@ -380,7 +382,7 @@ bool AStar::Algorithm<AlgDerived,NodeType,CostType>::search (double timeout)
         _this->publishPath(*thisNodeInHash_p);
         if (_this->getVerbosityLevel() == 1 && _this->getDebug() ){
           _this->debug_plot_->plotTrivial(thisNodeInHash_p->getDeposedPath().transformLinestring());
-          _this->debug_plot_->plotOccupancy(thisNodeInHash_p->getDeposedPath().transformOccupancy());
+          //_this->debug_plot_->plotOccupancy(thisNodeInHash_p->getDeposedPath().transformOccupancy());
         }
         if (_dosl_verbose_on(1)) {
             thisNodeInHash_p->print("Now expanding: ");
@@ -399,6 +401,7 @@ bool AStar::Algorithm<AlgDerived,NodeType,CostType>::search (double timeout)
         // Expand
         
         thisNodeInHash_p->expanded = true; // Put in closed list
+        thisNodeInHash_p->expansion_time = timer.read_milliseconds();
 
 
         
