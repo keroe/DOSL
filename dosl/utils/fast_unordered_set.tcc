@@ -54,39 +54,35 @@ template <class key, // 'key' must have copy constructer defined
           class EqualToFunctor = simple_equal_to<key> >
 class fast_unordered_set
 {
-/* 'Key' must have "bool operator==(key const &)" overloaded. */
-/* 'HashFunctor' should be a class with "int operator()(key const &)" overloaded */
-private:
-    HashFunctor hash_functor_instance; // hash function
-    EqualToFunctor equal_to_functor_instance; // equal-to function
-    size_t hash_table_size;
-    
 public:
     typedef key Key;
-    
+
     // Functions for setting private variables
-    
-    void reserve (size_t s) 
+
+    void reserve (size_t s)
         { if (HashTable) _dosl_err("Hash table already initiated!"); hash_table_size = s; }
-    
-    // variables
-    _DOSL_FAST_VECTOR <Key*>* HashTable; // contsins pointers to the items
-    int Size;
-    
+
+
     // initializor
     void init (void);
-    
+
     // Constructors
     fast_unordered_set () : HashTable(NULL), Size(-1), hash_table_size(1024) { }
     fast_unordered_set (size_t n=1024 , const HashFunctor& hf = HashFunctor(), const EqualToFunctor& eql = EqualToFunctor())
          : HashTable(NULL), Size(-1), hash_table_size(n), hash_functor_instance(hf), equal_to_functor_instance(eql) {  }
-    
+
+    // variables
+    _DOSL_FAST_VECTOR <Key*>* HashTable; // contsins pointers to the items
+    int Size;
+
+
     // Main interface function
     inline bool empty (void) { return (HashTable==NULL); }
     inline int size() { return (Size); }
     Key* get (key & n); // Returns pointer to already-existing item, else creates one
     template<class FindEqFunc=EqualToFunctor> std::vector<Key*> getall (key & n, FindEqFunc eqfunc_instance, bool search_other_bins=false);
-    
+    key* find_lowest_score (key& n);
+
     // Clear
     void clear (bool destroyHashTable=false) {
         if (HashTable) {
@@ -101,17 +97,25 @@ public:
             }
         }
     }
-    
+
     // Destructor
     ~fast_unordered_set() {
         if (HashTable) {
-            for (int a=0; a<hash_table_size; a++)
-                for (int b=0; b<HashTable[a].size(); b++)
+            for (uint a=0; a<hash_table_size; a++)
+                for (uint b=0; b<HashTable[a].size(); b++)
                     delete HashTable[a][b];
             delete[] HashTable;
             HashTable = NULL;
         }
     }
+
+/* 'Key' must have "bool operator==(key const &)" overloaded. */
+/* 'HashFunctor' should be a class with "int operator()(key const &)" overloaded */
+private:
+    size_t hash_table_size;
+    HashFunctor hash_functor_instance; // hash function
+    EqualToFunctor equal_to_functor_instance; // equal-to function
+    
     
     // ----------------------------------
     
@@ -167,7 +171,7 @@ key* fast_unordered_set<key,HashFunctor,EqualToFunctor>::get (key & n)
     #endif
     
     // A SIGSEGV signal generated from here most likely 'GetHashBin' returned a bin index larger than (hash_table_size-1).
-    for (int a=0; a<HashTable[hashBin].size(); ++a)
+    for (uint a=0; a<HashTable[hashBin].size(); ++a)
         if ( equal_to_functor_instance (*(HashTable[hashBin][a]), n) )
             return (HashTable[hashBin][a]);
     
@@ -201,5 +205,35 @@ std::vector<key*> fast_unordered_set<key,HashFunctor,EqualToFunctor>::getall (ke
                 
     return (ret);
 }
+
+template <class key, class HashFunctor, class EqualToFunctor>
+key* fast_unordered_set<key,HashFunctor,EqualToFunctor>::find_lowest_score (key& n) {
+    if (!HashTable) init(); // TODO: remove this check?
+
+    unsigned int startHashBin=0, endHashBinP1=hash_table_size;
+
+    startHashBin = hash_functor_instance(n);
+    #if _DOSL_HASH_BIN_CHECK
+    startHashBin %= hash_table_size;
+    #endif
+    endHashBinP1 = startHashBin+1;
+
+    std::vector<key*> max_key_vector;
+    for (int hashBin=startHashBin; hashBin<endHashBinP1; ++hashBin){
+      key* max_key = *std::min_element( HashTable[hashBin].begin(), HashTable[hashBin].end(),
+                                   []( const key* a, const key* b )
+                                   {
+                                       return a->f_score < b->f_score;
+                                   } );
+      max_key_vector.push_back(max_key);
+    }
+
+    return *std::min_element( max_key_vector.begin(), max_key_vector.end(),
+                                   []( const key* a, const key* b )
+                                   {
+                                       return a->f_score < b->f_score;
+                                   } );
+}
+
 
 #endif
